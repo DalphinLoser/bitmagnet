@@ -68,22 +68,21 @@ services:
     shm_size: 1g
     restart: unless-stopped
     environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-bitmagnet}
-      - PGUSER=${PGUSER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-bitmagnet}
+      PGUSER: ${PGUSER:-postgres}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
       start_period: 20s
 
-  # Visualization and dashboards:
   grafana:
     container_name: bitmagnet-grafana
     image: grafana/grafana:latest
     environment:
-      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
     volumes:
       - ./data/grafana:/var/lib/grafana
       # Provisioned data sources and dashboards:
@@ -95,7 +94,6 @@ services:
     networks:
       - bitmagnet
 
-  # Metrics and logs scraping:
   grafana-agent:
     container_name: bitmagnet-grafana-agent
     image: grafana/agent:latest
@@ -111,7 +109,7 @@ services:
       HOSTNAME: grafana-agent
       AGENT_MODE: flow
       LOKI_HOST: ${LOKI_HOST:-loki:3100}
-      POSTGRES_HOST: ${POSTGRES_HOST:-postgres:5432}
+      POSTGRES_HOST: $"{POSTGRES_HOST:-postgres}:5432"
       REDIS_HOST: ${REDIS_HOST:-redis:6379}
     ports:
       - "${GRAFANA_AGENT_PORT:-12345}:12345"
@@ -121,7 +119,6 @@ services:
     networks:
       - bitmagnet
 
-  # Metrics storage and aggregation:
   prometheus:
     container_name: bitmagnet-prometheus
     image: prom/prometheus:latest
@@ -138,7 +135,6 @@ services:
     extra_hosts:
       - "bitmagnet:${BITMAGNET_IP:-192.168.55.10}"
 
-  # Log storage and aggregation:
   loki:
     container_name: bitmagnet-loki
     image: grafana/loki:latest
@@ -153,7 +149,6 @@ services:
       - bitmagnet
     restart: unless-stopped
 
-  # Runtime profiling:
   pyroscope:
     container_name: bitmagnet-pyroscope
     image: pyroscope/pyroscope:latest
@@ -169,7 +164,6 @@ services:
       - bitmagnet
     restart: unless-stopped
 
-  # Prometheus metrics for Postgres:
   postgres-exporter:
     container_name: bitmagnet-postgres-exporter
     image: prometheuscommunity/postgres-exporter:latest
